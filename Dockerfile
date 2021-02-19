@@ -4,7 +4,7 @@ ENV SOFT="/soft"
 ENV DELME="${SOFT}/delme"
 ENV PATH="${PATH}:${SOFT}/samtools-1.11/bin:${SOFT}/htslib-1.11/bin:${SOFT}/libdeflate-1.7/usr/local/bin"
 RUN apt-get update && apt-get -y upgrade && \
-	apt-get install -y build-essential wget \
+	apt-get install -y build-essential wget git dh-autoreconf pkg-config \
     libncurses5-dev zlib1g-dev libbz2-dev liblzma-dev libcurl3-dev && \
 	apt-get clean && apt-get purge && \
 	rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*	
@@ -31,5 +31,27 @@ RUN mkdir $DELME && \
     make install DESTDIR=$SOFT/libdeflate-1.7 && \
     rm -rf $DELME/*
     
+RUN cd $DELME && \
+    git clone https://github.com/gt1/libmaus.git && \
+    cd libmaus && \
+    git checkout bade19f && \
+    autoreconf -if && \
+    ./configure --prefix=$SOFT/libmaus-bade19f && \
+    make -j 4 && \
+    make install && \
+    rm -rf $DELME/*
+    
+    
+    
+
+    
+
+    
+    
+    
+    
+    
+
+ 
     
 
