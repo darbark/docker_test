@@ -2,7 +2,8 @@ FROM ubuntu:18.04
 LABEL maintainer="daria.barkhova@gmail.com"
 ENV SOFT="/soft" 
 ENV DELME="${SOFT}/delme"
-ENV PATH="${PATH}:${SOFT}/samtools-1.11/bin:${SOFT}/htslib-1.11/bin:${SOFT}/libdeflate-1.7/usr/local/bin"
+ENV PATH="${PATH}:${SOFT}/samtools-1.11/bin:${SOFT}/htslib-1.11/bin:${SOFT}/libdeflate-1.7/usr/local/bin:${SOFT}/biobambam-ab7b33d/bin"
+ENV LIBMAUS="${SOFT}/libmaus-bade19f"
 RUN apt-get update && apt-get -y upgrade && \
 	apt-get install -y build-essential wget git dh-autoreconf pkg-config \
     libncurses5-dev zlib1g-dev libbz2-dev liblzma-dev libcurl3-dev && \
@@ -12,19 +13,24 @@ RUN apt-get update && apt-get -y upgrade && \
 WORKDIR $SOFT
 
 RUN mkdir $DELME && \
-    wget -O $DELME/samtools-1.11.tar.bz2 https://github.com/samtools/samtools/releases/download/1.11/samtools-1.11.tar.bz2 && \
+    wget -O $DELME/samtools-1.11.tar.bz2 \
+    https://github.com/samtools/samtools/releases/download/1.11/samtools-1.11.tar.bz2 && \
     tar -jxf $DELME/samtools-1.11.tar.bz2 -C $DELME && \
     cd $DELME/samtools-1.11 && \
     ./configure --prefix=$SOFT/samtools-1.11 && \
     make && \
-    make install && \
-    wget -O $DELME/htslib-1.11.tar.bz2 https://github.com/samtools/htslib/releases/download/1.11/htslib-1.11.tar.bz2 && \
+    make install
+    
+RUN wget -O $DELME/htslib-1.11.tar.bz2 \
+    https://github.com/samtools/htslib/releases/download/1.11/htslib-1.11.tar.bz2 && \
     tar -jxf $DELME/htslib-1.11.tar.bz2 -C $DELME && \
     cd $DELME/htslib-1.11 && \
     ./configure --prefix=$SOFT/htslib-1.11 && \
     make && \
-    make install && \
-    wget -O $DELME/v1.7.tar.gz https://github.com/ebiggers/libdeflate/archive/v1.7.tar.gz && \
+    make install
+    
+RUN wget -O $DELME/v1.7.tar.gz \
+    https://github.com/ebiggers/libdeflate/archive/v1.7.tar.gz && \
     tar -zxf $DELME/v1.7.tar.gz -C $DELME && \
     cd $DELME/libdeflate-1.7 && \
     make && \
@@ -40,6 +46,22 @@ RUN cd $DELME && \
     make -j 4 && \
     make install && \
     rm -rf $DELME/*
+    
+RUN cd $DELME && \
+    git clone https://github.com/gt1/biobambam.git && \
+    cd biobambam && \
+    git checkout ab7b33d && \
+    autoreconf -if && \
+    ./configure --with-libmaus=$LIBMAUS --prefix=$SOFT/biobambam-ab7b33d && \
+    make -j 4 && \
+    make install && \
+    rm -rf $DELME
+    
+CMD for path in $(find /soft -executable -type f | grep '/bin/'); \
+    do \
+    export $(basename -- $path | sed -e 's/\(.*\)/\U\1/' -e 's/[^a-zA-Z0-9]//g')=$path; \
+    done && \
+    bash
     
     
     
