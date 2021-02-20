@@ -1,7 +1,7 @@
 FROM ubuntu:18.04
 LABEL maintainer="daria.barkhova@gmail.com"
 ENV SOFT="/soft" 
-ENV DELME="${SOFT}/delme"
+ENV SOURCE="${SOFT}/source"
 ENV PATH="${PATH}:${SOFT}/samtools-1.11/bin:${SOFT}/htslib-1.11/bin:${SOFT}/libdeflate-1.7/usr/local/bin:${SOFT}/biobambam-ab7b33d/bin"
 ENV LIBMAUS="${SOFT}/libmaus-bade19f"
 RUN apt-get update && apt-get -y upgrade && \
@@ -12,32 +12,36 @@ RUN apt-get update && apt-get -y upgrade && \
 	
 WORKDIR $SOFT
 
-RUN mkdir $DELME && \
-    wget -O $DELME/samtools-1.11.tar.bz2 \
+# SAMTOOLS VERSION 1.11 released on Sep 22, 2020
+RUN mkdir $SOURCE && \
+    wget -O $SOURCE/samtools-1.11.tar.bz2 \
     https://github.com/samtools/samtools/releases/download/1.11/samtools-1.11.tar.bz2 && \
-    tar -jxf $DELME/samtools-1.11.tar.bz2 -C $DELME && \
-    cd $DELME/samtools-1.11 && \
+    tar -jxf $SOURCE/samtools-1.11.tar.bz2 -C $SOURCE && \
+    cd $SOURCE/samtools-1.11 && \
     ./configure --prefix=$SOFT/samtools-1.11 && \
     make && \
     make install
     
-RUN wget -O $DELME/htslib-1.11.tar.bz2 \
+# HTSLIB VERSION 1.11 released on Sep 22, 2020
+RUN wget -O $SOURCE/htslib-1.11.tar.bz2 \
     https://github.com/samtools/htslib/releases/download/1.11/htslib-1.11.tar.bz2 && \
-    tar -jxf $DELME/htslib-1.11.tar.bz2 -C $DELME && \
-    cd $DELME/htslib-1.11 && \
+    tar -jxf $SOURCE/htslib-1.11.tar.bz2 -C $SOURCE && \
+    cd $SOURCE/htslib-1.11 && \
     ./configure --prefix=$SOFT/htslib-1.11 && \
     make && \
     make install
     
-RUN wget -O $DELME/v1.7.tar.gz \
+# LIBDEFLATE VERSIN 1.7 released on Nov 10, 2020
+RUN wget -O $SOURCE/v1.7.tar.gz \
     https://github.com/ebiggers/libdeflate/archive/v1.7.tar.gz && \
-    tar -zxf $DELME/v1.7.tar.gz -C $DELME && \
-    cd $DELME/libdeflate-1.7 && \
+    tar -zxf $SOURCE/v1.7.tar.gz -C $SOURCE && \
+    cd $SOURCE/libdeflate-1.7 && \
     make && \
     make install DESTDIR=$SOFT/libdeflate-1.7 && \
-    rm -rf $DELME/*
+    rm -rf $SOURCE/*
     
-RUN cd $DELME && \
+# LIBMAUS VERSION 0.0.196 released on Mar 26, 2015
+RUN cd $SOURCE && \
     git clone https://github.com/gt1/libmaus.git && \
     cd libmaus && \
     git checkout bade19f && \
@@ -45,9 +49,10 @@ RUN cd $DELME && \
     ./configure --prefix=$SOFT/libmaus-bade19f && \
     make -j 4 && \
     make install && \
-    rm -rf $DELME/*
-    
-RUN cd $DELME && \
+    rm -rf $SOURCE/*
+
+# BIOBAMBAM VERSION 0.0.191 on Apr 1, 2015
+RUN cd $SOURCE && \
     git clone https://github.com/gt1/biobambam.git && \
     cd biobambam && \
     git checkout ab7b33d && \
@@ -55,25 +60,10 @@ RUN cd $DELME && \
     ./configure --with-libmaus=$LIBMAUS --prefix=$SOFT/biobambam-ab7b33d && \
     make -j 4 && \
     make install && \
-    rm -rf $DELME
+    rm -rf $SOURCE
     
 CMD for path in $(find /soft -executable -type f | grep '/bin/'); \
     do \
     export $(basename -- $path | sed -e 's/\(.*\)/\U\1/' -e 's/[^a-zA-Z0-9]//g')=$path; \
     done && \
     bash
-    
-    
-    
-
-    
-
-    
-    
-    
-    
-    
-
- 
-    
-
