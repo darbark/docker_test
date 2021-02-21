@@ -1,5 +1,7 @@
 FROM ubuntu:18.04
 LABEL maintainer="daria.barkhova@gmail.com"
+ARG cores=1
+ENV CORE=$cores
 ENV SOFT="/soft" 
 ENV SOURCE="${SOFT}/source"
 ENV PATH="${PATH}:${SOFT}/samtools-1.11/bin:${SOFT}/htslib-1.11/bin:${SOFT}/libdeflate-1.7/usr/local/bin:${SOFT}/biobambam-ab7b33d/bin"
@@ -16,7 +18,7 @@ RUN mkdir $SOURCE && \
     https://github.com/ebiggers/libdeflate/archive/v1.7.tar.gz && \
     tar -zxf $SOURCE/v1.7.tar.gz -C $SOURCE && \
     cd $SOURCE/libdeflate-1.7 && \
-    make && \
+    make -j $CORE && \
     make install DESTDIR=$SOFT/libdeflate-1.7 && \
 # HTSLIB VERSION 1.11 released on Sep 22, 2020
     wget -O $SOURCE/htslib-1.11.tar.bz2 \
@@ -24,7 +26,7 @@ RUN mkdir $SOURCE && \
     tar -jxf $SOURCE/htslib-1.11.tar.bz2 -C $SOURCE && \
     cd $SOURCE/htslib-1.11 && \
     ./configure --prefix=$SOFT/htslib-1.11 && \
-    make && \
+    make -j $CORE && \
     make install && \
 # SAMTOOLS VERSION 1.11 released on Sep 22, 2020
     wget -O $SOURCE/samtools-1.11.tar.bz2 \
@@ -32,7 +34,7 @@ RUN mkdir $SOURCE && \
     tar -jxf $SOURCE/samtools-1.11.tar.bz2 -C $SOURCE && \
     cd $SOURCE/samtools-1.11 && \
     ./configure --prefix=$SOFT/samtools-1.11 && \
-    make && \
+    make -j $CORE && \
     make install && \
     rm -rf $SOURCE/*    
 RUN cd $SOURCE && \
@@ -42,7 +44,7 @@ RUN cd $SOURCE && \
     git checkout bade19f && \
     autoreconf -if && \
     ./configure --prefix=$SOFT/libmaus-bade19f && \
-    make -j 4 && \
+    make -j $CORE && \
     make install && \
     cd $SOURCE && \
 # BIOBAMBAM VERSION 0.0.191 on Apr 1, 2015
@@ -51,7 +53,7 @@ RUN cd $SOURCE && \
     git checkout ab7b33d && \
     autoreconf -if && \
     ./configure --with-libmaus=$LIBMAUS --prefix=$SOFT/biobambam-ab7b33d && \
-    make -j 4 && \
+    make -j $CORE && \
     make install && \
     rm -rf $SOURCE
 CMD for path in $(find /soft -executable -type f | grep '/bin/'); \
